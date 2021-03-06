@@ -9,16 +9,66 @@
 #define EATING 1
 #define THINKING 0
 
+// Definitions for all the pins used by the leds
+#define GPIO1 13
+#define GPIO2 12
+#define GPIO3 14
+#define GPIO4 27
+#define GPIO5 26
+
 // Place where the forks are stored
 int semaphores[5];
 // Place where the statussus of the philosophers are stored
-int status[5];
+int statussus[5];
+
+// This function initializes all leds
+int initializeLeds(){
+    gpio_pad_select_gpio(GPIO1);
+    gpio_pad_select_gpio(GPIO2);
+    gpio_pad_select_gpio(GPIO3);
+    gpio_pad_select_gpio(GPIO4);
+    gpio_pad_select_gpio(GPIO5);
+
+    gpio_set_direction(GPIO1, GPIO_MODE_OUTPUT);
+    gpio_set_direction(GPIO2, GPIO_MODE_OUTPUT);
+    gpio_set_direction(GPIO3, GPIO_MODE_OUTPUT);
+    gpio_set_direction(GPIO4, GPIO_MODE_OUTPUT);
+    gpio_set_direction(GPIO5, GPIO_MODE_OUTPUT);
+    return ESP_OK;
+}
+
+// This function handles status changes
+void setStatus(int philosopher, int status){
+    statussus[philosopher] = status;
+
+    switch (philosopher)
+    {
+    case 0:
+        gpio_set_level(GPIO1,status);
+        break;
+    case 1:
+        gpio_set_level(GPIO2,status);
+        break;
+    case 2:
+        gpio_set_level(GPIO3,status);
+        break;
+    case 3:
+        gpio_set_level(GPIO4,status);
+        break;
+    case 4:
+        gpio_set_level(GPIO5,status);
+        break;
+    default:
+        break;
+    }
+}
 
 // Function to check if he can eat
 int askForFork(int philosopher){
     // He has a fork himself
     if(semaphores[philosopher]==0){
-        return 0;
+        setStatus(philosopher,THINKING);
+        return THINKING;
     }
 
     // Check if the person after him has a fork
@@ -29,7 +79,8 @@ int askForFork(int philosopher){
            // We know he can take two forks so we take the two forks
            semaphores[0] = 0;
            semaphores[4] = 0;
-           return 1;
+           setStatus(philosopher,EATING);
+           return EATING;
        }
     }else{
         if( semaphores[philosopher+1] == 1){
@@ -37,11 +88,13 @@ int askForFork(int philosopher){
            // We know he can take two forks so we take the two forks
            semaphores[philosopher] = 0;
            semaphores[philosopher+1] = 0;
-           return 1;
+           setStatus(philosopher,EATING);
+           return EATING;
        }
     }
 
-    return 0;
+    setStatus(philosopher,THINKING);
+    return THINKING;
 }
 
 // Function that returns the forks he took
@@ -63,10 +116,10 @@ void philosopher_task(void *pvParameters){
 
 for(;;){
     // Philosopher asks if he can borrow the fork from the philosophers after him
-    status[philosopher] = askForFork(philosopher);
+    askForFork(philosopher);
 
     // Check the status of the philosopher
-    if  (status[philosopher] == THINKING){
+    if  (statussus[philosopher] == THINKING){
         vTaskPrioritySet(NULL,uxTaskPriorityGet(NULL)+1);
         // He is thinking for 1 second waiting for forks
         vTaskDelay(2000/portTICK_PERIOD_MS);
@@ -88,6 +141,8 @@ for(;;){
 
 void app_main()
 {
+    initializeLeds();
+
     ets_timer_init();
 
 // Initiate semaphores so the first time we create the philosophers they can start already
@@ -114,7 +169,7 @@ for(int i = 0; i<5 ; i++){
         vTaskDelay(2000/portTICK_PERIOD_MS);
         for (int i = 0; i < 5; i++)
         {
-            if (status[i]==THINKING){
+            if (statussus[i]==THINKING){
                 printf("Philosopher %s is thinking\n",pcTaskGetTaskName(handler[i]));
             } else{
                 printf("Philosopher %s is eating\n",pcTaskGetTaskName(handler[i]));
