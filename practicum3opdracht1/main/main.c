@@ -166,7 +166,6 @@ for(int i = 0; i<5 ; i++){
 	
     // For loop that displays the status of every philosopher every 2 seconds
     for(;;){
-        vTaskDelay(2000/portTICK_PERIOD_MS);
         for (int i = 0; i < 5; i++)
         {
             if (statussus[i]==THINKING){
@@ -175,8 +174,8 @@ for(int i = 0; i<5 ; i++){
                 printf("Philosopher %s is eating\n",pcTaskGetTaskName(handler[i]));
             }
         }
-
         printf("--------------------------\n");
+        vTaskDelay(2000/portTICK_PERIOD_MS);
     }
 }
 
