@@ -73,13 +73,13 @@ void writerTask(void *pvParameters){
         takeWriterSemaphore();
 
 // Writing data for 1 second
-        printf("%s is writing string\n",pcTaskGetTaskName(NULL));
+        printf("%s is writing string at tick %d\n",pcTaskGetTaskName(NULL),xTaskGetTickCount());
         vTaskDelay(1000/portTICK_PERIOD_MS);
 
         giveWriterSemaphore();
 
 // Letting other people write and read
-        vTaskDelay(4000/portTICK_PERIOD_MS);
+        vTaskDelay(3000/portTICK_PERIOD_MS);
 
     }
 }
@@ -90,7 +90,7 @@ void readerTask(void *pvParameters){
         takeReaderSemaphore();
         
         // Reading for 1 second
-        printf("%s is reading string\n",pcTaskGetTaskName(NULL));
+        printf("%s is reading string at tick %d\n",pcTaskGetTaskName(NULL),xTaskGetTickCount());
         vTaskDelay(100/portTICK_PERIOD_MS);
         
         giveReaderSemaphore();
