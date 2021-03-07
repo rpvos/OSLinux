@@ -2,10 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
-#include "semaphore.h"
-
-sem_t writerSemaphore,readerSemaphore;
-
+#include "freertos/semphr.h"
 
 void writerTask(void *pvParameters){
     
